@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系客服微信</title>
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+        }
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 16px;
+            border: 1px solid #eee;
+        }
+        .steps {
+            text-align: left;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .copy-btn {
+            background: #07c160;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background: #06ad56;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // ========== 配置区 ==========
+        const CONFIG = {
+            wechatId: "wkdmq258",   // 替换为你的微信号
+            debugMode: false,
+            qrImage: "https://ibb.co/VWYgV4qq", // 二维码路径
+            jumpDelay: 2000,              // 跳转等待时间(ms)
+            debugMode: true               // 开发时true，部署时false
+        };
+
+        // ========== 核心函数 ==========
+        function init() {
+            if (CONFIG.debugMode) {
+                console.log("[DEBUG] 当前配置:", CONFIG);
+                showQRPage();
+                return;
+            }
+
+            const isWechat = /MicroMessenger/i.test(navigator.userAgent);
+            
+            if (isWechat) {
+                showQRPage();
+                return;
+            }
+
+            try {
+                // 尝试唤起微信
+                window.location.href = `weixin://dl/add?username=${CONFIG.wechatId}`;
+                
+                // 兜底检测
+                setTimeout(() => {
+                    if (!document.hidden) showQRPage();
+                }, CONFIG.jumpDelay);
+
+            } catch(e) {
+                showQRPage();
+            }
+        }
+
+        function showQRPage() {
+            document.body.innerHTML = `
+                <div class="card">
+                    <h3>添加客服微信</h3>
+                    <img src="${CONFIG.qrImage}" class="qr-code" alt="微信二维码">
+                    <div class="steps">
+                        <p><strong>操作步骤：</strong></p>
+                        <p>1. 长按保存二维码</p>
+                        <p>2. 打开微信 → 扫一扫 → 相册</p>
+                        <p>3. 选择二维码添加</p>
+                    </div>
+                    <button class="copy-btn" onclick="copyWechatId()">复制微信号</button>
+                    <p style="margin-top:12px;color:#999;">${CONFIG.wechatId}</p>
+                </div>
+            `;
+        }
+
+        function copyWechatId() {
+            navigator.clipboard.writeText(CONFIG.wechatId)
+                .then(() => alert('复制成功！'))
+                .catch(() => {
+                    // 兼容旧浏览器
+                    const input = document.createElement('input');
+                    input.value = CONFIG.wechatId;
+                    document.body.appendChild(input);
+                    input.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(input);
+                    alert('已复制到剪贴板');
+                });
+        }
+
+        // 启动初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
